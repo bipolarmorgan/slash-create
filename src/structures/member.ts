@@ -6,24 +6,26 @@ import User from './user';
 
 class Member {
   /** The member's ID */
-  id: string;
+  readonly id: string;
   /** The member's nickname */
-  nick?: string;
+  readonly nick?: string;
   /** The timestamp the member joined the guild */
-  joinedAt: number;
+  readonly joinedAt: number;
   /** An array of role IDs that the user has. */
-  roles: string[];
+  readonly roles: string[];
   /** The time of when this member boosted the server. */
-  premiumSince?: number;
+  readonly premiumSince?: number;
   /** Whether the user is muted in voice channels */
-  mute: boolean;
+  readonly mute: boolean;
   /** Whether the user is deafened in voice channels */
-  deaf: boolean;
+  readonly deaf: boolean;
+  /** Whether the member is pending verification */
+  readonly pending: boolean;
   /** The user object for this member */
-  user: User;
+  readonly user: User;
 
   /** The creator of the member class. */
-  private _creator: SlashCreator;
+  private readonly _creator: SlashCreator;
 
   private _permissionsBitfield?: Permissions;
   private _permissions: string;
@@ -35,12 +37,13 @@ class Member {
   constructor(data: CommandMember, creator: SlashCreator) {
     this._creator = creator;
 
-    this.nick = data.nick;
+    if (data.nick) this.nick = data.nick;
     this.joinedAt = Date.parse(data.joined_at);
     this.roles = data.roles;
     if (data.premium_since) this.premiumSince = Date.parse(data.premium_since);
     this.mute = data.mute;
     this.deaf = data.deaf;
+    this.pending = data.pending;
     this._permissions = data.permissions;
 
     this.id = data.user.id;
@@ -58,7 +61,7 @@ class Member {
     return `<@!${this.id}>`;
   }
 
-  /** @private */
+  /** @hidden */
   toString() {
     return `[Member ${this.id}]`;
   }

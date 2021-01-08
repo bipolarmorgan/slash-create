@@ -5,18 +5,18 @@ import UserFlags from './userFlags';
 /** Represents a user on Discord. */
 class User {
   /** The user's ID. */
-  id: string;
+  readonly id: string;
   /** The user's username. */
-  username: string;
+  readonly username: string;
   /** The user's discriminator. */
-  discriminator: string;
+  readonly discriminator: string;
   /** The user's avatar hash. */
-  avatar?: string;
+  readonly avatar?: string;
   /** Whether the user is a bot. */
-  bot: boolean;
+  readonly bot: boolean;
 
   /** The creator of the user class. */
-  private _creator: SlashCreator;
+  private readonly _creator: SlashCreator;
 
   private _flagsBitfield?: UserFlags;
   private _flags: number;
@@ -31,7 +31,7 @@ class User {
     this.id = data.id;
     this.username = data.username;
     this.discriminator = data.discriminator;
-    this.avatar = data.avatar;
+    if (data.avatar) this.avatar = data.avatar;
     this._flags = data.public_flags;
     this.bot = data.bot || false;
   }
@@ -47,7 +47,7 @@ class User {
     return `<@${this.id}>`;
   }
 
-  /** @private */
+  /** @hidden */
   toString() {
     return `[User ${this.id}]`;
   }

@@ -1,8 +1,8 @@
 import { UserObject } from '../constants';
 import CommandContext, { EditMessageOptions } from '../context';
 import User from './user';
-/** @private */
-interface MessageData {
+/** @hidden */
+export interface MessageData {
     id: string;
     type: number;
     content: string;
@@ -16,44 +16,44 @@ interface MessageData {
     mention_everyone: boolean;
     tts: boolean;
     timestamp: string;
-    edited_timestamp?: string;
+    edited_timestamp: string | null;
     flags: number;
     webhook_id: string;
 }
 /** Represents a Discord message. */
 declare class Message {
     /** The message's ID */
-    id: string;
+    readonly id: string;
     /** The message type */
-    type: number;
+    readonly type: number;
     /** The content of the message */
-    content: string;
-    /** The ID of the channel the message is in. */
-    channelID: string;
-    /** The author of the message. */
-    author: User;
-    /** The message's attachments. */
-    attachments: any[];
-    /** The message's embeds. */
-    embeds: any[];
+    readonly content: string;
+    /** The ID of the channel the message is in */
+    readonly channelID: string;
+    /** The author of the message */
+    readonly author: User;
+    /** The message's attachments */
+    readonly attachments: any[];
+    /** The message's embeds */
+    readonly embeds: any[];
     /** The message's user mentions */
-    mentions: string[];
+    readonly mentions: string[];
     /** The message's role mentions */
-    roleMentions: string[];
+    readonly roleMentions: string[];
     /** Whether the message mentioned everyone/here */
-    mentionedEveryone: boolean;
+    readonly mentionedEveryone: boolean;
     /** Whether the message used TTS */
-    tts: boolean;
+    readonly tts: boolean;
     /** The timestamp of the message */
-    timestamp: number;
+    readonly timestamp: number;
     /** The timestamp of when the message was last edited */
-    editedTimestamp?: number;
+    readonly editedTimestamp?: number;
     /** The message's flags */
-    flags: number;
+    readonly flags: number;
     /** The message's webhook ID */
-    webhookID: string;
-    /** The context that created the message class. */
-    private _ctx;
+    readonly webhookID: string;
+    /** The context that created the message class */
+    private readonly _ctx;
     /**
      * @param data The data for the message
      * @param ctx The instantiating context

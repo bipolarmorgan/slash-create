@@ -1,4 +1,5 @@
 import Server, { RequestHandler, ServerOptions } from '../server';
+// @ts-ignore
 import * as Express from 'express';
 
 let express: typeof Express;
@@ -11,7 +12,7 @@ try {
  * @see http://expressjs.com
  */
 class ExpressServer extends Server {
-  private app: Express.Application;
+  private readonly app: Express.Application;
 
   /**
    * @param app The express application. Must have express.json installed as a middleware.
@@ -54,7 +55,7 @@ class ExpressServer extends Server {
 
   /** @private */
   createEndpoint(path: string, handler: RequestHandler) {
-    this.app.post(path, (req, res) =>
+    this.app.post(path, (req: Express.Request, res: Express.Response) =>
       handler(
         {
           headers: req.headers,

@@ -1,5 +1,4 @@
 import EventEmitter from 'eventemitter3';
-import TypedEmitter from 'typed-emitter';
 import Collection from '@discordjs/collection';
 import HTTPS from 'https';
 import { formatAllowedMentions, FormattedAllowedMentions, MessageAllowedMentions, oneLine, verifyKey } from './util';
@@ -14,6 +13,7 @@ import {
   PartialApplicationCommand
 } from './constants';
 import SlashCommand from './command';
+import TypedEmitter from './util/typedEmitter';
 import RequestHandler from './util/requestHandler';
 import SlashCreatorAPI from './api';
 import Server, { TransformedRequest, RespondFunction, Response } from './server';
@@ -45,8 +45,11 @@ interface SlashCreatorEvents {
 interface SlashCreatorOptions {
   /** Your Application's ID */
   applicationID: string;
-  /** The public key for your application */
-  publicKey: string;
+  /**
+   * The public key for your application.
+   * Required for webservers.
+   */
+  publicKey?: string;
   /**
    * The bot/client token for the application.
    * Recommended to set this in your config.
@@ -63,6 +66,8 @@ interface SlashCreatorOptions {
    * If an unknown command is registered, this is ignored.
    */
   unknownCommandResponse?: boolean;
+  /** Whether to include source in the auto-acknowledgement timeout. */
+  autoAcknowledgeSource?: boolean;
   /** The default allowed mentions for all messages. */
   allowedMentions?: MessageAllowedMentions;
   /** The default format to provide user avatars in. */
@@ -101,7 +106,7 @@ class SlashCreator extends ((EventEmitter as any) as new () => TypedEmitter<Slas
   /** The request handler for the creator */
   readonly requestHandler: RequestHandler;
   /** The API handler for the creator */
-  readonly api: SlashCreatorAPI;
+  readonly api = new SlashCreatorAPI(this);
   /** The commands loaded onto the creator */
   readonly commands = new Collection<string, SlashCommand>();
   /**
@@ -112,7 +117,7 @@ class SlashCreator extends ((EventEmitter as any) as new () => TypedEmitter<Slas
   /** The server being used in the creator */
   server?: Server;
   /** The formatted allowed mentions from the options */
-  allowedMentions: FormattedAllowedMentions;
+  readonly allowedMentions: FormattedAllowedMentions;
   /** The command to run when an unknown command is used. */
   unknownCommand?: SlashCommand;
 
@@ -122,7 +127,6 @@ class SlashCreator extends ((EventEmitter as any) as new () => TypedEmitter<Slas
     super();
 
     if (!opts.applicationID) throw new Error('An application ID must be defined!');
-    if (!opts.publicKey) throw new Error('A public key must be defined!');
     if (opts.token && !opts.token.startsWith('Bot ') && !opts.token.startsWith('Bearer '))
       opts.token = 'Bot ' + opts.token;
 
@@ -137,6 +141,7 @@ class SlashCreator extends ((EventEmitter as any) as new () => TypedEmitter<Slas
         defaultImageFormat: 'jpg',
         defaultImageSize: 128,
         unknownCommandResponse: true,
+        autoAcknowledgeSource: false,
         latencyThreshold: 30000,
         ratelimiterOffset: 0,
         requestTimeout: 15000,
@@ -268,11 +273,10 @@ class SlashCreator extends ((EventEmitter as any) as new () => TypedEmitter<Slas
     if (this.server) throw new Error('A server was already set in this creator.');
     this.server = server;
 
-    try {
-      if (this.server.isWebserver)
-        this.server.createEndpoint(this.options.endpointPath as string, this._onRequest.bind(this));
-      else this.server.handleInteraction((interaction) => this._onInteraction(interaction, null, false));
-    } catch {}
+    if (this.server.isWebserver) {
+      if (!this.options.publicKey) throw new Error('A public key is required to be set when using a webserver.');
+      this.server.createEndpoint(this.options.endpointPath as string, this._onRequest.bind(this));
+    } else this.server.handleInteraction((interaction) => this._onInteraction(interaction, null, false));
 
     return this;
   }
@@ -449,7 +453,7 @@ class SlashCreator extends ((EventEmitter as any) as new () => TypedEmitter<Slas
         body: 'Invalid signature'
       });
 
-    const verified = await verifyKey(JSON.stringify(treq.body), signature, timestamp, this.options.publicKey);
+    const verified = await verifyKey(JSON.stringify(treq.body), signature, timestamp, this.options.publicKey as string);
 
     if (!verified) {
       this.emit('debug', 'A request failed to be verified');

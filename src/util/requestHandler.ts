@@ -6,7 +6,11 @@ import Zlib from 'zlib';
 import DiscordHTTPError from '../errors/DiscordHTTPError';
 import DiscordRESTError from '../errors/DiscordRESTError';
 
-/** @private */
+export const USER_AGENT = `DiscordBot (https://github.com/Snazzah/slash-create, ${
+  require('../../package.json').version
+})`;
+
+/** @hidden */
 interface LatencyRef {
   latency: number;
   offset?: number;
@@ -22,21 +26,21 @@ interface LatencyRef {
  */
 class RequestHandler {
   /** The base URL for all requests. */
-  baseURL: string;
+  readonly baseURL: string = API_BASE_URL;
   /** The user agent for all requests. */
-  userAgent: string;
+  readonly userAgent: string = USER_AGENT;
   /** The ratelimits per route. */
-  ratelimits: { [route: string]: SequentialBucket };
+  readonly ratelimits: { [route: string]: SequentialBucket } = {};
   /** The amount of time a request will timeout. */
-  requestTimeout: number;
+  readonly requestTimeout: number;
   /** TheHTTP agent used in the request handler. */
-  agent?: HTTPS.Agent;
+  readonly agent?: HTTPS.Agent;
   /** The latency reference for the handler. */
-  latencyRef: LatencyRef;
+  readonly latencyRef: LatencyRef;
   /** Whether the handler is globally blocked. */
-  globalBlock: boolean;
+  globalBlock: boolean = false;
   /** The request queue. */
-  readyQueue: any[];
+  readonly readyQueue: any[] = [];
 
   /** The creator that initialized the handler. */
   private _creator: SlashCreator;
@@ -44,9 +48,6 @@ class RequestHandler {
   /** @param creator The instantiating creator. */
   constructor(creator: SlashCreator) {
     this._creator = creator;
-    this.baseURL = API_BASE_URL;
-    this.userAgent = `DiscordBot (https://github.com/Snazzah/slash-create, ${require('../../package.json').version})`;
-    this.ratelimits = {};
     this.requestTimeout = creator.options.requestTimeout as number;
     this.agent = creator.options.agent;
     this.latencyRef = {
@@ -57,8 +58,6 @@ class RequestHandler {
       timeOffsets: new Array(10).fill(0),
       lastTimeOffsetCheck: 0
     };
-    this.globalBlock = false;
-    this.readyQueue = [];
   }
 
   /** Unblocks the request handler. */
@@ -217,7 +216,7 @@ class RequestHandler {
                   `Missing ratelimit headers for SequentialBucket(${this.ratelimits[route].remaining}/${this.ratelimits[route].limit}) with non-default limit\n` +
                     `${resp.statusCode} ${resp.headers['content-type']}: ${method} ${route} | ${resp.headers['cf-ray']}\n` +
                     'content-type = ' +
-                    +'\n' +
+                    '\n' +
                     'x-ratelimit-remaining = ' +
                     resp.headers['x-ratelimit-remaining'] +
                     '\n' +

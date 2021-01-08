@@ -1,11 +1,11 @@
 import Member from './structures/member';
 import { RespondFunction } from './server';
 import SlashCreator from './creator';
-import { CommandOption, InteractionRequestData } from './constants';
+import { AnyCommandOption, InteractionRequestData } from './constants';
 import { MessageAllowedMentions } from './util';
 import Message from './structures/message';
 /** Command options converted for ease of use. */
-declare type ConvertedOption = {
+export declare type ConvertedOption = {
     [key: string]: ConvertedOption;
 } | string | number | boolean;
 /** The options for {@link CommandContext#edit}. */
@@ -121,10 +121,10 @@ declare class CommandContext {
      */
     acknowledge(includeSource?: boolean): Promise<boolean>;
     /** @private */
-    static convertOptions(options: CommandOption[]): {
+    static convertOptions(options: AnyCommandOption[]): {
         [key: string]: ConvertedOption;
     };
     /** @private */
-    static getSubcommandArray(options: CommandOption[]): string[];
+    static getSubcommandArray(options: AnyCommandOption[]): string[];
 }
 export default CommandContext;

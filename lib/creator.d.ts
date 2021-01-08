@@ -1,10 +1,10 @@
 /// <reference types="node" />
-import TypedEmitter from 'typed-emitter';
 import Collection from '@discordjs/collection';
 import HTTPS from 'https';
 import { FormattedAllowedMentions, MessageAllowedMentions } from './util';
 import { ImageFormat, RawRequest, RequireAllOptions } from './constants';
 import SlashCommand from './command';
+import TypedEmitter from './util/typedEmitter';
 import RequestHandler from './util/requestHandler';
 import SlashCreatorAPI from './api';
 import Server, { TransformedRequest } from './server';
@@ -33,8 +33,11 @@ interface SlashCreatorEvents {
 interface SlashCreatorOptions {
     /** Your Application's ID */
     applicationID: string;
-    /** The public key for your application */
-    publicKey: string;
+    /**
+     * The public key for your application.
+     * Required for webservers.
+     */
+    publicKey?: string;
     /**
      * The bot/client token for the application.
      * Recommended to set this in your config.
@@ -51,6 +54,8 @@ interface SlashCreatorOptions {
      * If an unknown command is registered, this is ignored.
      */
     unknownCommandResponse?: boolean;
+    /** Whether to include source in the auto-acknowledgement timeout. */
+    autoAcknowledgeSource?: boolean;
     /** The default allowed mentions for all messages. */
     allowedMentions?: MessageAllowedMentions;
     /** The default format to provide user avatars in. */
@@ -99,7 +104,7 @@ declare class SlashCreator extends SlashCreator_base {
     /** The server being used in the creator */
     server?: Server;
     /** The formatted allowed mentions from the options */
-    allowedMentions: FormattedAllowedMentions;
+    readonly allowedMentions: FormattedAllowedMentions;
     /** The command to run when an unknown command is used. */
     unknownCommand?: SlashCommand;
     /** @param opts The options for the creator */

@@ -4,7 +4,7 @@ import SlashCreator from './creator';
 import { oneLine, validateOptions } from './util';
 
 /** The options for a {@link SlashCommand}. */
-interface SlashCommandOptions {
+export interface SlashCommandOptions {
   /** The name of the command. */
   name: string;
   /** The description of the command. */
@@ -22,7 +22,7 @@ interface SlashCommandOptions {
 }
 
 /** The throttling options for a {@link SlashCommand}. */
-interface ThrottlingOptions {
+export interface ThrottlingOptions {
   /** Maximum number of usages of the command allowed in the time frame. */
   usages: number;
   /** Amount of time to count the usages of the command within (in seconds). */
@@ -30,28 +30,28 @@ interface ThrottlingOptions {
 }
 
 /** @private */
-interface ThrottleObject {
+export interface ThrottleObject {
   start: number;
   usages: number;
   timeout: any;
 }
 
-/** Represends a Discord slash command. */
+/** Represents a Discord slash command. */
 class SlashCommand {
   /** The command's name. */
-  commandName: string;
+  readonly commandName: string;
   /** The command's description. */
-  description: string;
+  readonly description: string;
   /** The options for the command. */
-  options?: ApplicationCommandOption[];
+  readonly options?: ApplicationCommandOption[];
   /** The guild ID for the command. */
-  guildID?: string;
+  readonly guildID?: string;
   /** The permissions required to use this command. */
-  requiredPermissions?: Array<string>;
+  readonly requiredPermissions?: Array<string>;
   /** The throttling options for this command. */
-  throttling?: ThrottlingOptions;
+  readonly throttling?: ThrottlingOptions;
   /** Whether this command is used for unknown commands. */
-  unknown: boolean;
+  readonly unknown: boolean;
   /**
    * The file path of the command.
    * Used for refreshing the require cache.
@@ -73,7 +73,7 @@ class SlashCommand {
     if (this.constructor.name === 'SlashCommand') throw new Error('The base SlashCommand cannot be instantiated.');
     this.creator = creator;
 
-    SlashCommand.validateOptions(opts);
+    if (!opts.unknown) SlashCommand.validateOptions(opts);
 
     this.commandName = opts.name;
     this.description = opts.description;
@@ -92,7 +92,7 @@ class SlashCommand {
     return {
       name: this.commandName,
       description: this.description,
-      options: this.options
+      ...(this.options ? { options: this.options } : {})
     };
   }
 

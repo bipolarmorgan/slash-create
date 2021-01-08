@@ -161,13 +161,13 @@ export interface InteractionRequestData {
 export interface CommandMember {
   user: CommandUser;
   roles: string[];
-  premium_since?: string;
+  premium_since: string | null;
   permissions: string;
   pending: boolean;
   is_pending: boolean;
   mute: boolean;
   deaf: boolean;
-  nick?: string;
+  nick: string | null;
   joined_at: string;
 }
 
@@ -175,12 +175,12 @@ export interface CommandMember {
 export interface CommandUser {
   id: string;
   username: string;
-  avatar?: string;
+  avatar: string | null;
   discriminator: string;
   public_flags: number;
 }
 
-/** @private */
+/** @hidden */
 export interface UserObject extends CommandUser {
   /** Whether this user is a bot. */
   bot?: boolean;
@@ -190,15 +190,24 @@ export interface UserObject extends CommandUser {
 export interface CommandData {
   id: string;
   name: string;
-  options?: CommandOption[];
+  options?: AnyCommandOption[];
 }
+
+/** @private */
+export type AnyCommandOption = CommandOption | CommandSubcommandOption;
 
 /** @private */
 export interface CommandOption {
   /** The name for the option. */
   name: string;
   value?: string | number | boolean;
-  options?: CommandOption[];
+}
+
+/** @private */
+export interface CommandSubcommandOption {
+  /** The name for the option. */
+  name: string;
+  options: CommandOption[];
 }
 
 /** @see https://www.npmjs.com/package/require-all#usage */

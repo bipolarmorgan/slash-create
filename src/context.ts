@@ -2,7 +2,7 @@ import Member from './structures/member';
 import { RespondFunction } from './server';
 import SlashCreator from './creator';
 import {
-  CommandOption,
+  AnyCommandOption,
   Endpoints,
   InteractionRequestData,
   InteractionResponseFlags,
@@ -12,7 +12,7 @@ import { formatAllowedMentions, FormattedAllowedMentions, MessageAllowedMentions
 import Message from './structures/message';
 
 /** Command options converted for ease of use. */
-type ConvertedOption = { [key: string]: ConvertedOption } | string | number | boolean;
+export type ConvertedOption = { [key: string]: ConvertedOption } | string | number | boolean;
 
 /** The options for {@link CommandContext#edit}. */
 export interface EditMessageOptions {
@@ -103,15 +103,13 @@ class CommandContext {
     this.subcommands = data.data.options ? CommandContext.getSubcommandArray(data.data.options) : [];
 
     // Auto-acknowledge if no response was given in 2.5 seconds
-    this._timeout = setTimeout(() => this.acknowledge(), 2500);
+    this._timeout = setTimeout(() => this.acknowledge(creator.options.autoAcknowledgeSource || false), 2500);
   }
 
   /** Whether the interaction has expired. Interactions last 15 minutes. */
   get expired() {
     return this.invokedAt + 1000 * 60 * 15 < Date.now();
   }
-
-  // @TODO handle this: https://get.snaz.in/AFLrDBa.png
 
   /**
    * Sends a message, if it already made an initial response, this will create a follow-up message.
@@ -281,20 +279,20 @@ class CommandContext {
   }
 
   /** @private */
-  static convertOptions(options: CommandOption[]) {
+  static convertOptions(options: AnyCommandOption[]) {
     const convertedOptions: { [key: string]: ConvertedOption } = {};
     for (const option of options) {
-      if (option.options) convertedOptions[option.name] = CommandContext.convertOptions(option.options);
+      if ('options' in option) convertedOptions[option.name] = CommandContext.convertOptions(option.options);
       else convertedOptions[option.name] = option.value !== undefined ? option.value : {};
     }
     return convertedOptions;
   }
 
   /** @private */
-  static getSubcommandArray(options: CommandOption[]) {
+  static getSubcommandArray(options: AnyCommandOption[]) {
     const result: string[] = [];
     for (const option of options) {
-      if (option.options) result.push(option.name, ...CommandContext.getSubcommandArray(option.options));
+      if ('options' in option) result.push(option.name, ...CommandContext.getSubcommandArray(option.options));
       else if (option.value === undefined && option.name) result.push(option.name);
     }
     return result;
